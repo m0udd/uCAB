@@ -7,7 +7,6 @@
         <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.4.2.min.js') }}"></script>    
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-1.0.0.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-0.9.9.js') }}"></script>
-        <script type="text/javascript" src="{{ url_for('static', filename='jcanvas.min.js') }}"></script>
 
         <script type="text/javascript" charset="utf-8">
 
@@ -16,20 +15,6 @@ $(document).ready(function () {
     var map_server_x = 1;
     var map_server_y = 1;
     var map;
-    
-    function drawCirCle(context, xScale,yScale)
-    {
-        context.beginPath();
-        context.moveTo(0,0);
-        context.shadowColor = 'black';      
-        context.shadowBlur = 5;
-        context.shadowOffsetX = -1;
-        context.shadowOffsetY = 1;
-        context.arc(xScale, yScale, 20, 0, Math.PI*2, 0);
-        context.fillStyle = 'orange';
-        context.fill();
-        context.closePath();
-    }
 
     function drawMap()
     {
@@ -39,41 +24,92 @@ $(document).ready(function () {
 
         var canvas = document.getElementById('mapZone');
         if (canvas.getContext) {
-            
+
             //Set the general appearance 
             canvas.setAttribute('width', $(window).width() - 25);
             canvas.setAttribute('height', $(window).height() - 25);
             canvas.setAttribute('style', "border:1px solid #000000;");
-            
+
             if (map) {
-                
+
                 //canvas manipulation                
                 var context = canvas.getContext('2d');
                 
-                //drow a circle for all vertices
-                for (var p in map.map.vertices )
+                //Draw map name
+                context.beginPath();
+                context.font = '30pt Calibri';
+                context.fillStyle = 'black';
+                context.fillText(map.name, 10, 30);
+                context.fill();
+                context.closePath();
+
+                //Drow streets for all verticess
+                for (var s in map.map.streets)
                 {
-                    var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50) ;
-                    var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
+                    //Get path
+                    context.beginPath();
+                    var pa = map.map.streets[s].path[0]                    
+                    var pb = map.map.streets[s].path[1]
                     
-                    console.log(xScale, yScale);
+                    //Search the first path
+                    for (var p in map.map.vertices)
+                    {
+                        if(map.map.vertices[p].name === pa)
+                        {
+                            var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
+                            var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
+                            context.moveTo(xScale, yScale);
+                            break;
+                        }
+                    }
                     
-                    drawCirCle(context, xScale, yScale);                   
+                    //Search the second path
+                    for (var p in map.map.vertices)
+                    {
+                        if(map.map.vertices[p].name === pb)
+                        {
+                            var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
+                            var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);                            
+                            context.lineTo(xScale, yScale);
+                            break;
+                        }
+                    }                    
+                    
+                    context.lineWidth = 7;
+                    context.strokeStyle = '#F5D0A9';
+                    context.lineCap = 'round';
+                    context.stroke();
+                    context.fill();
+                    context.closePath();                   
                 }
                 
-                //drow a lines for all vertices
+                //Draw vertices
+                for (var p in map.map.vertices)
+                {
+                    var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
+                    var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
 
-
-
-              
-
+                    context.beginPath();
+                    context.shadowColor = 'black';
+                    context.shadowBlur = 5;
+                    context.shadowOffsetX = -1;
+                    context.shadowOffsetY = 1;
+                    context.fillStyle = 'orange';
+                    context.arc(xScale, yScale, 20, 0, Math.PI * 2, 0);
+                    context.fill();
+                    context.closePath();
+                    
+                    //Draw name
+                    context.beginPath();
+                    context.font = '20pt Calibri';
+                    context.fillStyle = 'black';
+                    context.fillText(map.map.vertices[p].name, xScale - 7, yScale + 7);
+                    context.fill();
+                    context.closePath();
+                }
             }
-            
-            //end canvas manipulation
-            
         }
-    }
-    ;
+    };
 
     $('.enter_link').click(function () {
         $(this).parent().fadeOut(300);
