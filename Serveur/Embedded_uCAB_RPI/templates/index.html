@@ -7,53 +7,73 @@
         <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.4.2.min.js') }}"></script>    
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-1.0.0.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-0.9.9.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='jcanvas.min.js') }}"></script>
 
         <script type="text/javascript" charset="utf-8">
-
 
 $(document).ready(function () {
 
     var map_server_x = 1;
     var map_server_y = 1;
     var map;
+    
+    function drawCirCle(context, xScale,yScale)
+    {
+        context.beginPath();
+        context.moveTo(0,0);
+        context.shadowColor = 'black';      
+        context.shadowBlur = 5;
+        context.shadowOffsetX = -1;
+        context.shadowOffsetY = 1;
+        context.arc(xScale, yScale, 20, 0, Math.PI*2, 0);
+        context.fillStyle = 'orange';
+        context.fill();
+        context.closePath();
+    }
 
     function drawMap()
     {
-   
-        var canvasDiv = document.getElementById('mapZone');
-        canvasDiv.setAttribute('width', $(window).width() - 25);
-        canvasDiv.setAttribute('height', $(window).height() - 25);
-        canvasDiv.setAttribute('style', "border:1px solid #000000;");
-        
         //TODO FIX IT
         map_server_x = 1;
         map_server_y = 1;
 
-/*
-        if (map) {
-            //drow a circle for all vertices
-            for (var p in map.map.vertices)
-            {
-                var x = map.map.vertices[p].x * $(window).width() / map_server_x;
-                var y = map.map.vertices[p].y * $(window).height() / map_server_y;
+        var canvas = document.getElementById('mapZone');
+        if (canvas.getContext) {
+            
+            //Set the general appearance 
+            canvas.setAttribute('width', $(window).width() - 25);
+            canvas.setAttribute('height', $(window).height() - 25);
+            canvas.setAttribute('style', "border:1px solid #000000;");
+            
+            if (map) {
                 
-                var canv = document.createElement('canvas');
-                canv.id = 'vertex';
-                var context = canv.getContext('2d');
-                var radius = 10;
+                //canvas manipulation                
+                var context = canvas.getContext('2d');
                 
-                context.beginPath();
-                context.arc(x, y, radius, 0, 2 * Math.PI, false);
-                context.fillStyle = 'orange';
-                context.fill();
-                context.strokeStyle = '#003300';
-                context.stroke();
+                //drow a circle for all vertices
+                for (var p in map.map.vertices )
+                {
+                    var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50) ;
+                    var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
+                    
+                    console.log(xScale, yScale);
+                    
+                    drawCirCle(context, xScale, yScale);                   
+                }
                 
-                document.getElementById('mapZone').appendChild(canv); // adds the canvas to #someBox
+                //drow a lines for all vertices
+
+
+
+              
+
             }
+            
+            //end canvas manipulation
+            
         }
-        */
-    };
+    }
+    ;
 
     $('.enter_link').click(function () {
         $(this).parent().fadeOut(300);
@@ -101,6 +121,7 @@ $(document).ready(function () {
     // the data is displayed in the "Received" section of the page
     socket.on('new map', function (msg) {
         map = msg;
+        $('#log').append('<br>NEW MAP is receved');
         drawMap();
     });
 

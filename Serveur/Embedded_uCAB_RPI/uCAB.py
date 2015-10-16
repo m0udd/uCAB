@@ -29,7 +29,6 @@ global clients_slots
 clients_slots = [True,True,True]
 
 
-
 #This thread is used for moving cab (computation)
 def background_thread():
     #Send an keep alive message every 5 seconds (for tests and debug)
@@ -82,26 +81,24 @@ def client_disconnect():
     clients_slots[int(session.get('id', 0))] = True;
     print('Client disconnected, ID : ' + str(session.get('id', 0)))
 
-'''
+
 #the client wishes receive its map   
 @socketio.on('get my map', namespace='/client')
 def client_get_map():
-    nb_of_cients = 0;
-    if i[0] == True and i[1] == True and i[2] == True:
+    if clients_slots[0] == False and clients_slots[1] == False and clients_slots[2] == False:
         emit('new map', map.getMap(int(session.get('id', 0))))
     else:
         emit('no map', {'data': "The server have not 3 clients! sorry... :( ", 'isOk': False})
-'''
+
 
 #the client called a cab
 @socketio.on('new target', namespace='/client')
 def client_set_new_target(message):
     x_target = message['x']
     y_target = message['y']
-    print 'New target, client with ID :', str(session.get('id', 0)), 'set X = ', x_target, ' Y = ', y_target
+    #print 'New target, client with ID :', str(session.get('id', 0)), 'set X = ', x_target, ' Y = ', y_target
     #Broadcast to the cab
-    socketio.emit('new destination', {'x': x_target, 'y': y_target}, namespace='/cab')
-    
+    socketio.emit('new destination', {'x': x_target, 'y': y_target}, namespace='/cab') 
  
 
 #
@@ -139,7 +136,6 @@ def client_set_new_target(message):
     #map.set_cab_travelled(cab_id, 0, 0)
     #Broadcast than that the map changed for all clients
     emit('new map is available', broadcast=True)
-
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0')
