@@ -4,6 +4,8 @@
 #@author : mingar
 #
 
+import json
+
 class MapManager:
     
     def __init__(self):
@@ -153,18 +155,15 @@ class MapManager:
                 "queue": 0,
                 "position": 
                 {
-                    "x": 0,
-                    "y": 0
+                    "vertice": "a",
                 }, 
                 "target": 
                 {
-                    "x": 0,
-                    "y": 0
+                    "vertice": "a",
                 }, 
                 "travelled": 
                 {
-                    "x": 0,
-                    "y": 0
+                    "vertice": "a",
                 }
             }]
         }]
@@ -175,36 +174,35 @@ class MapManager:
 
     #Convert only a user json to a string    
     def json_to_str_map(self, id):
-        if id > len(self.map['areas']):
-            id = len(self.map['areas'])
+        if id > len(self.map[0]['areas']):
+            id = len(self.map[0]['areas'])
         return json.dumps(self.map[0]['areas'][id], ensure_ascii=False)
 
-    def set_cab_state(self, id, isAvailable, isMoving, addToQueue, x_target, y_target):
+    def set_cab_state(self, id, isAvailable, isMoving, addToQueue, vertice_to_go):
         #update the cab's state 
         self.map[0]['cabs'][id]['available'] = isAvailable
         self.map[0]['cabs'][id]['moving'] = isMoving
         self.map[0]['cabs'][id]['queue'] = self.map[0]['cabs'][id]['queue'] + addToQueue
         #update the traget    
-        self.map[0]['cabs'][id]['target']['x'] = x_target
-        self.map[0]['cabs'][id]['target']['y'] = y_target   
+        self.map[0]['cabs'][id]['target']['vertice'] = vertice_to_go
+
+    def set_cab_position(self, id, vertice):
+        self.map[0]['cabs'][id]['position']['vertice']= vertice
 
 
-    def set_cab_position(self, id, x, y):
+    def set_cab_target(self, id, vertice):
+        self.map[0]['cabs'][id]['target']['vertice']= vertice
+
+
+    def set_cab_travelled(self, id, vertice):
         #set the distance since the last course to 0
-        self.map[0]['cabs'][id]['position']['x'] = x
-        self.map[0]['cabs'][id]['position']['y'] = y
+        self.map[0]['cabs'][id]['travelled']['vertice']= vertice
 
-    def set_cab_target(self, id, x, y):
-        #set the distance since the last course to 0
-        self.map[0]['cabs'][id]['target']['x'] = x
-        self.map[0]['cabs'][id]['target']['y'] = y
-
-    def set_cab_travelled(self, id, x, y):
-        #set the distance since the last course to 0
-        self.map[0]['cabs'][id]['travelled']['x'] = x
-        self.map[0]['cabs'][id]['travelled']['y'] = y
 
     def print_all_cab(self):
         print '---'
         print self.map[0]['cabs']
         print '---'
+
+    def getMap(self, id):
+        return self.map[0]['areas'][id]

@@ -1,25 +1,59 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
         <title>uCAB - PI3A</title>
+        <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">        
         <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.4.2.min.js') }}"></script>    
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-1.0.0.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-0.9.9.js') }}"></script>
-        
+
         <script type="text/javascript" charset="utf-8">
-function drawMap()
-{
-    var canvasDiv = document.getElementById('mapZone');
-    canvasDiv.setAttribute('width', $(window).width() - 25);
-    canvasDiv.setAttribute('height', $(window).height() - 25);
-    canvasDiv.setAttribute('style', "border:1px solid #000000;");
-}
+
 
 $(document).ready(function () {
 
     var map_server_x = 1;
     var map_server_y = 1;
+    var map;
+
+    function drawMap()
+    {
+   
+        var canvasDiv = document.getElementById('mapZone');
+        canvasDiv.setAttribute('width', $(window).width() - 25);
+        canvasDiv.setAttribute('height', $(window).height() - 25);
+        canvasDiv.setAttribute('style', "border:1px solid #000000;");
+        
+        //TODO FIX IT
+        map_server_x = 1;
+        map_server_y = 1;
+
+/*
+        if (map) {
+            //drow a circle for all vertices
+            for (var p in map.map.vertices)
+            {
+                var x = map.map.vertices[p].x * $(window).width() / map_server_x;
+                var y = map.map.vertices[p].y * $(window).height() / map_server_y;
+                
+                var canv = document.createElement('canvas');
+                canv.id = 'vertex';
+                var context = canv.getContext('2d');
+                var radius = 10;
+                
+                context.beginPath();
+                context.arc(x, y, radius, 0, 2 * Math.PI, false);
+                context.fillStyle = 'orange';
+                context.fill();
+                context.strokeStyle = '#003300';
+                context.stroke();
+                
+                document.getElementById('mapZone').appendChild(canv); // adds the canvas to #someBox
+            }
+        }
+        */
+    };
 
     $('.enter_link').click(function () {
         $(this).parent().fadeOut(300);
@@ -43,20 +77,20 @@ $(document).ready(function () {
     });
 
     //Get the mouse click and send to the server
-    $('#mapZone').click(function(e) {
-    //Get position     
-    var offset = $(this).offset();
-    var x = e.pageX - offset.left;
-    var y = e.pageY - offset.top;
-    //Normalize
-    x = x * map_server_x / $('#mapZone').width();
-    y = y * map_server_y / $('#mapZone').height();
-    //alert(x + ':' + y);
-    //Send to the server
-    socket.emit('new target', {"x": x, "y": y});  
-    socket.emit('cab ok', {'x': x, 'y': y});   
+    $('#mapZone').click(function (e) {
+        //Get position     
+        var offset = $(this).offset();
+        var x = e.pageX - offset.left;
+        var y = e.pageY - offset.top;
+        //Normalize
+        x = x * map_server_x / $('#mapZone').width();
+        y = y * map_server_y / $('#mapZone').height();
+        //alert(x + ':' + y);
+        //Send to the server
+        socket.emit('new target', {"x": x, "y": y});
+        socket.emit('cab ok', {'x': x, 'y': y});
     });
-  
+
     // event handler for server sent data
     // the data is displayed in the "Received" section of the page
     socket.on('log', function (msg) {
@@ -66,13 +100,16 @@ $(document).ready(function () {
     // event handler for server sent data
     // the data is displayed in the "Received" section of the page
     socket.on('new map', function (msg) {
-        $('#log').append('<br>NEW MAP received : ' + msg.data);
+        map = msg;
         drawMap();
     });
-    
+
+    socket.on('no map', function (msg) {
+        $('#log').append('<br>NO MAP available : ' + msg.data);
+    });
     socket.on('new map is available', function (msg) {
-    $('#log').append('<br>NEW MAP is available : ' + msg.data);
-        socket.emit('get my map');        
+        $('#log').append('<br>NEW MAP is available');
+        socket.emit('get my map');
     });
 
     // handlers for the different forms in the page
@@ -122,7 +159,7 @@ $(document).ready(function () {
             <canvas id="mapZone" width="200" height="100">
                 Your browser does not support the HTML5 canvas tag.
             </canvas>
-            
+
             <h2>Get MAP:</h2>
             <form id="get_map" method="POST" action="#">
                 <input type="submit" value="Get map">
