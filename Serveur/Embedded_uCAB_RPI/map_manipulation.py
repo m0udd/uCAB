@@ -49,8 +49,26 @@ class MapManager:
                                 },
                                 "weight": 2
                             }
-                        ]
+                        ],
+                        "cabs":[
+                            {
+                                "available": False,
+                                "moving": False,
+                                "position": 
+                                {
+                                    "vertice": "m",
+                                }, 
+                                "target": 
+                                {
+                                    "vertice": "a",
+                                }, 
+                                "travelled": 
+                                {
+                                    "vertice": 1,
+                                }
+                            }]
                     }
+                    
                 }, 
                 {
                     "name": "Quartier Sud",
@@ -103,7 +121,24 @@ class MapManager:
                                 },
                                 "weight": 2
                             }
-                        ]
+                        ],
+                        "cabs":[
+                            {
+                                "available": False,
+                                "moving": False,
+                                "position": 
+                                {
+                                    "vertice": "m",
+                                }, 
+                                "target": 
+                                {
+                                    "vertice": "a",
+                                }, 
+                                "travelled": 
+                                {
+                                    "vertice": 1,
+                                }
+                            }]
                     }
                 },
                 {
@@ -147,25 +182,7 @@ class MapManager:
                         ]
                     }
                 }
-            ],
-            "cabs":[
-            {
-                "available": False,
-                "moving": False,
-                "queue": 0,
-                "position": 
-                {
-                    "vertice": "a",
-                }, 
-                "target": 
-                {
-                    "vertice": "a",
-                }, 
-                "travelled": 
-                {
-                    "vertice": "a",
-                }
-            }]
+            ]            
         }]
 
     #Convert all json to a string
@@ -187,16 +204,16 @@ class MapManager:
         self.map[0]['cabs'][id]['target']['vertice'] = vertice_to_go
 
     def set_cab_position(self, id, vertice):
-        self.map[0]['cabs'][id]['position']['vertice']= vertice
+        self.map[0]['cabs'][id]['position']['vertice'] = vertice
 
 
     def set_cab_target(self, id, vertice):
-        self.map[0]['cabs'][id]['target']['vertice']= vertice
+        self.map[0]['cabs'][id]['target']['vertice'] = vertice
 
 
     def set_cab_travelled(self, id, vertice):
         #set the distance since the last course to 0
-        self.map[0]['cabs'][id]['travelled']['vertice']= vertice
+        self.map[0]['cabs'][id]['travelled']['vertice'] = vertice
 
 
     def print_all_cab(self):

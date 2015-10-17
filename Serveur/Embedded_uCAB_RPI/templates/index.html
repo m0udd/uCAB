@@ -38,7 +38,8 @@ $(document).ready(function () {
     }
     
     function drawMap()
-    {
+    {      
+        linked = [];
         var canvas = document.getElementById('mapZone');
         if (canvas.getContext) {
 
@@ -61,7 +62,7 @@ $(document).ready(function () {
 
                 //canvas manipulation                
                 var context = canvas.getContext('2d');
-
+        
                 //Draw map name
                 context.beginPath();
                 context.font = '30pt Calibri';
@@ -147,8 +148,46 @@ $(document).ready(function () {
                     context.fill();
                     context.closePath();
                 }
+                
+                //Draw ALL the cabs if exist
+                if(map.map.cabs)
+                {    
+                    for(var cab in map.map.cabs)
+                    {
+                        //Get the X and Y of the point
+                        var v = -1;
+                        for (var p in map.map.vertices)
+                        {
+                            console.log(map.map.vertices[p].name, ' = ',map.map.cabs[cab].position.vertice);
+                            if(map.map.vertices[p].name === map.map.cabs[cab].position.vertice)
+                            {
+                                v = p; 
+                            }
+                                
+                        }
+                        
 
-                console.log(linked);
+                        if(v > -1)                        
+                        {
+                            //ouf, we have the vertex coordinate !
+                            var xScale = Math.abs(map.map.vertices[v].x * $(window).width() / map_server_x -75);
+                            var yScale = Math.abs(map.map.vertices[v].y * $(window).height() / map_server_y -75);
+                            //load the cab pics
+                            var imageObj = new Image();
+                            context.beginPath();
+                            imageObj.onload = function() {
+                              context.drawImage(imageObj, xScale, yScale, 50, 50);
+                            };
+                            imageObj.src = '{{ url_for('static', filename='img/cab.png') }}';
+                            context.fill();
+                            context.closePath();                        
+                        }
+                    }
+                    
+                }
+                
+                
+                
             }
         }
     }
