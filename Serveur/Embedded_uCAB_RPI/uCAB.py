@@ -35,6 +35,7 @@ def background_thread():
     while True:
         time.sleep(5)
         #TODO : cab motion
+        #if vertice to go is != vertice actual
         #Broadcast than that the map changed for all clients
         #emit('new map is available', broadcast=True)
         #end of motion ? update cab
@@ -96,7 +97,7 @@ def client_disconnect():
 @socketio.on('get my map', namespace='/client')
 def client_get_map():
     if clients_slots[0] == False and clients_slots[1] == False and clients_slots[2] == False:
-        emit('new map', map.getMap(int(session.get('id', 0))))
+        emit('new map', map.get_map(int(session.get('id', 0))))
     else:
         emit('no map', {'data': "The server have not 3 clients! sorry... :( ", 'isOk': False})
 
@@ -133,7 +134,7 @@ def client_disconnect():
 
 
 #the cab agrees to retrieve client
-@socketio.on('cab ok', namespace='/client')
+@socketio.on('cab ok', namespace='/cab')
 def client_set_new_target(message):
     cab_id = int(session.get('id', 0))
     x_target = message['x']

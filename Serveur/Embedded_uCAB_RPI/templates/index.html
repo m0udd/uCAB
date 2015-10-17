@@ -25,7 +25,8 @@ $(document).ready(function () {
         var occur = 0;
         for (var i = 0; i < linked.length; i++) {
             if (linked[i] === obj)
-                if(++occur > 1) return occur;
+                if (++occur > 1)
+                    return occur;
         }
         return occur;
     }
@@ -33,12 +34,14 @@ $(document).ready(function () {
     function isMultiLinkedVervex(name)
     {
         //is the vertex is linked more than one times?
-        if (countOccur(name) > 1) return true;
-        else return false;
+        if (countOccur(name) > 1)
+            return true;
+        else
+            return false;
     }
-    
+
     function drawMap()
-    {      
+    {
         linked = [];
         var canvas = document.getElementById('mapZone');
         if (canvas.getContext) {
@@ -55,14 +58,14 @@ $(document).ready(function () {
                 {
                     linked.push(map.map.bridges[b].from);
                 }
-                
+
                 //Map size
                 map_server_x = map.map.weight.w;
                 map_server_y = map.map.weight.w;
 
                 //canvas manipulation                
                 var context = canvas.getContext('2d');
-        
+
                 //Draw map name
                 context.beginPath();
                 context.font = '30pt Calibri';
@@ -148,62 +151,47 @@ $(document).ready(function () {
                     context.fill();
                     context.closePath();
                 }
-                
-                //Draw ALL the cabs if exist
-                if(map.map.cabs)
-                {    
-                    for(var cab in map.map.cabs)
-                    {
-                        //Get the X and Y of the point
-                        var v = -1;
-                        for (var p in map.map.vertices)
-                        {
-                            console.log(map.map.vertices[p].name, ' = ',map.map.cabs[cab].position.vertice);
-                            if(map.map.vertices[p].name === map.map.cabs[cab].position.vertice)
-                            {
-                                v = p; 
-                            }
-                                
-                        }
-                        
 
-                        if(v > -1)                        
+                //Draw ALL the cabs if exist
+                if (map.map.cabs)
+                {
+                    for (var cab in map.map.cabs)
+                    {
+                        if (map.map.cabs[cab].position.area === map.name)
                         {
-                            //ouf, we have the vertex coordinate !
-                            var xScale = Math.abs(map.map.vertices[v].x * $(window).width() / map_server_x -75);
-                            var yScale = Math.abs(map.map.vertices[v].y * $(window).height() / map_server_y -75);
-                            //load the cab pics
-                            var imageObj = new Image();
-                            context.beginPath();
-                            imageObj.onload = function() {
-                              context.drawImage(imageObj, xScale, yScale, 50, 50);
-                            };
-                            imageObj.src = '{{ url_for('static', filename='img/cab.png') }}';
-                            context.fill();
-                            context.closePath();                        
+                            //Get the X and Y of the point
+                            var v = -1;
+                            for (var p in map.map.vertices)
+                            {
+                                if (map.map.vertices[p].name === map.map.cabs[cab].position.vertex)
+                                {
+                                    v = p;
+                                }
+                            }
+
+                            if (v > -1)
+                            {
+                                //ouf, we have the vertex coordinate !
+                                var xScale = Math.abs(map.map.vertices[v].x * $(window).width() / map_server_x - 50);
+                                var yScale = Math.abs(map.map.vertices[v].y * $(window).height() / map_server_y - 50);
+                                //load the cab pics
+                                var imageObj = new Image();
+                                context.beginPath();
+                                imageObj.onload = function () {
+                                    context.drawImage(imageObj, xScale - 25, yScale - 25, 50, 50);
+                                };
+                                imageObj.src = '{{ url_for('static', filename='img/cab.png') }}';
+                                context.fill();
+                                context.closePath();
+                            }
                         }
                     }
-                    
                 }
-                
-                
-                
             }
         }
     }
     ;
-
-    $('.enter_link').click(function () {
-        $(this).parent().fadeOut(300);
-        //Show the map
-        window.onresize = drawMap;
-        drawMap();
-        //Add some style effect
-        $("#mapScreen").show("slow", function () {
-            //After effect         
-        });
-    });
-
+    
     //Namespace for client
     namespace = '/client';
 
@@ -214,9 +202,22 @@ $(document).ready(function () {
         //todo : show a popup
     });
 
+    $('.enter_link').click(function () {
+            $(this).parent().fadeOut(500);
+            //GET and Show the map
+            socket.emit('get my map');
+            window.onresize = drawMap;
+            drawMap();
+            //Add some style effect
+            $("#mapScreen").show("slow", function () {
+                //After effect         
+            });
+            
+        });
+        
     //Get the mouse click and send to the server
     $('#mapZone').click(function (e) {
-        //Get position     
+        //Get position
         var offset = $(this).offset();
         var x = e.pageX - offset.left;
         var y = e.pageY - offset.top;
@@ -226,7 +227,6 @@ $(document).ready(function () {
         //alert(x + ':' + y);
         //Send to the server
         socket.emit('new target', {"x": x, "y": y});
-        socket.emit('cab ok', {'x': x, 'y': y});
     });
 
     // event handler for server sent data
@@ -279,11 +279,11 @@ $(document).ready(function () {
                 }
             </style>
 
-            <img src="{{ url_for('static', filename='img/imerir.jpg') }}"  width="200" height="200" />
+            <img src="{{ url_for('static', filename='img/imerir.jpg') }}"  width="100" height="100" />
             <a href="#" class="enter_link">
-                <img src="{{ url_for('static', filename='img/uCAB.png') }}" alt="Click here to enter" width="400" height="200"/>
+                <img src="{{ url_for('static', filename='img/uCAB.png') }}" alt="Click here to enter" width="200" height="100"/>
             </a>
-            <img src="{{ url_for('static', filename='img/raspberry.png') }}" width="200" height="200"/>    
+            <img src="{{ url_for('static', filename='img/raspberry.png') }}" width="100" height="100"/>    
         </div>
 
         <div id="mapScreen"> 

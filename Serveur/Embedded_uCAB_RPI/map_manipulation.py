@@ -26,6 +26,26 @@ class MapManager:
                             },
                             {
                                 "name": "b",
+                                "x": 0.1,
+                                "y": 0.2
+                            },
+                            {
+                                "name": "c",
+                                "x": 0.15,
+                                "y": 0.6
+                            },
+                            {
+                                "name": "a",
+                                "x": 0.7,
+                                "y": 0.5
+                            },
+                            {
+                                "name": "d",
+                                "x": 0.4,
+                                "y": 0.75
+                            },
+                            {
+                                "name": "v",
                                 "x": 0.5,
                                 "y": 1
                             }
@@ -38,37 +58,54 @@ class MapManager:
                                     "b"
                                 ],
                                 "oneway": False
+                            },{
+                                "name": "bd",
+                                "path": [
+                                    "b",
+                                    "d"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "bc",
+                                "path": [
+                                    "b",
+                                    "c"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "cd",
+                                "path": [
+                                    "c",
+                                    "d"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "da",
+                                "path": [
+                                    "d",
+                                    "a"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "dv",
+                                "path": [
+                                    "d",
+                                    "v"
+                                ],
+                                "oneway": False
                             }
                         ],
                         "bridges": [
                             {
-                                "from": "b",
+                                "from": "v",
                                 "to": {
                                     "area": "Quartier Sud",
                                     "vertex": "h"
                                 },
                                 "weight": 2
                             }
-                        ],
-                        "cabs":[
-                            {
-                                "available": False,
-                                "moving": False,
-                                "position": 
-                                {
-                                    "vertice": "m",
-                                }, 
-                                "target": 
-                                {
-                                    "vertice": "a",
-                                }, 
-                                "travelled": 
-                                {
-                                    "vertice": 1,
-                                }
-                            }]
+                        ]
                     }
-                    
                 }, 
                 {
                     "name": "Quartier Sud",
@@ -121,24 +158,7 @@ class MapManager:
                                 },
                                 "weight": 2
                             }
-                        ],
-                        "cabs":[
-                            {
-                                "available": False,
-                                "moving": False,
-                                "position": 
-                                {
-                                    "vertice": "m",
-                                }, 
-                                "target": 
-                                {
-                                    "vertice": "a",
-                                }, 
-                                "travelled": 
-                                {
-                                    "vertice": 1,
-                                }
-                            }]
+                        ]
                     }
                 },
                 {
@@ -184,7 +204,28 @@ class MapManager:
                 }
             ]            
         }]
-
+        
+        self.cabs = [
+                {
+                    "available": False,
+                    "moving": False,
+                    "position": 
+                    {
+                        "vertex": "m",
+                        "area": "Quartier Nord",
+                    },
+                    "target": 
+                    {
+                        "vertex": "m",
+                        "area": "Quartier Nord",
+                    }, 
+                    "travelled": 
+                    {
+                        "nbOfVertices": 1,
+                    }
+                }]
+    
+    
     #Convert all json to a string
     def json_to_str_map(self):
         return json.dumps(self.map[0], ensure_ascii=False)
@@ -221,5 +262,17 @@ class MapManager:
         print self.map[0]['cabs']
         print '---'
 
-    def getMap(self, id):
-        return self.map[0]['areas'][id]
+
+    def get_map(self, id):
+        newMap = self.map[0]['areas'][id]
+        newMap['map']['cabs'] = self.cabs
+        return newMap
+    
+    
+    def remove_cab(self, cabId):
+        if cabs[cabId] in cabs: cabs.remove(cabs[cabId])
+        
+    def move_cab(self, cabId, newVertex):
+        if cabs[cabId] in cabs: 
+            cabs[cabId]['position'] = newVertex
+            
