@@ -57,13 +57,13 @@ def index():
 
 #The device URL
 @app.route('/client')
-def get_url_of_webservices():    
+def get_url_of_webservices_clients():    
     return render_template('url.json.html', namespace='client')
 
 
 #The device URL
 @app.route('/cab')
-def get_url_of_webservices():    
+def get_url_of_webservices_cab():    
     return render_template('url.json.html', namespace='cab')
 
 #

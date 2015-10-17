@@ -11,17 +11,32 @@
         <script type="text/javascript" charset="utf-8">
 
 $(document).ready(function () {
-    
+
     var map;
-    
+
     var map_server_x = 1;
     var map_server_y = 1;
 
-    function search(arr, obj) {
-        for(var i=0; i<arr.length; i++) {
-            if (arr[i] == obj) return true;
+    //vertices has have a street or a bridge
+    var linked = [];
+
+
+    function countOccur(obj) {
+        var occur = 0;
+        for (var i = 0; i < linked.length; i++) {
+            if (linked[i] === obj)
+                if(++occur > 1) return occur;
+        }
+        return occur;
     }
-}
+
+    function isMultiLinkedVervex(name)
+    {
+        //is the vertex is linked more than one times?
+        if (countOccur(name) > 1) return true;
+        else return false;
+    }
+    
     function drawMap()
     {
         var canvas = document.getElementById('mapZone');
@@ -34,13 +49,16 @@ $(document).ready(function () {
 
             if (map) {
 
+                //add the bridge vertex for the color drawing (Draw vertices)
+                for (var b in map.map.bridges)
+                {
+                    linked.push(map.map.bridges[b].from);
+                }
+                
                 //Map size
                 map_server_x = map.map.weight.w;
                 map_server_y = map.map.weight.w;
-                
-                //vertices has have a street or a bridge
-                var linked = [];
-                
+
                 //canvas manipulation                
                 var context = canvas.getContext('2d');
 
@@ -102,10 +120,21 @@ $(document).ready(function () {
 
                     context.beginPath();
                     context.shadowColor = 'black';
-                    context.shadowBlur = 5;
-                    context.shadowOffsetX = -1;
-                    context.shadowOffsetY = 1;
-                    context.fillStyle = 'orange';
+
+                    if (isMultiLinkedVervex(map.map.vertices[p].name))
+                    {
+                        context.shadowBlur = 3;
+                        context.shadowOffsetX = 0;
+                        context.shadowOffsetY = 0;
+                        context.fillStyle = 'orange';
+
+                    } else {
+                        context.shadowBlur = 5;
+                        context.shadowOffsetX = -1;
+                        context.shadowOffsetY = 1;
+                        context.fillStyle = 'red';
+                    }
+
                     context.arc(xScale, yScale, 20, 0, Math.PI * 2, 0);
                     context.fill();
                     context.closePath();
@@ -118,7 +147,7 @@ $(document).ready(function () {
                     context.fill();
                     context.closePath();
                 }
-                
+
                 console.log(linked);
             }
         }
