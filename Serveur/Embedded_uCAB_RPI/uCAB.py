@@ -52,9 +52,19 @@ def index():
     #Too many clients?
     if clients_slots[0] == False and clients_slots[1] == False and clients_slots[2] == False:
         template = 'too_many.html'
-        print 'tyooyoyoyo'
     return render_template(template)
 
+
+#The device URL
+@app.route('/client')
+def get_url_of_webservices():    
+    return render_template('url.json.html', namespace='client')
+
+
+#The device URL
+@app.route('/cab')
+def get_url_of_webservices():    
+    return render_template('url.json.html', namespace='cab')
 
 #
 # The client SocketIO

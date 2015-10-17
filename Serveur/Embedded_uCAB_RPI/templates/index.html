@@ -11,17 +11,19 @@
         <script type="text/javascript" charset="utf-8">
 
 $(document).ready(function () {
-
+    
+    var map;
+    
     var map_server_x = 1;
     var map_server_y = 1;
-    var map;
 
+    function search(arr, obj) {
+        for(var i=0; i<arr.length; i++) {
+            if (arr[i] == obj) return true;
+    }
+}
     function drawMap()
     {
-        //TODO FIX IT
-        map_server_x = 1;
-        map_server_y = 1;
-
         var canvas = document.getElementById('mapZone');
         if (canvas.getContext) {
 
@@ -32,9 +34,16 @@ $(document).ready(function () {
 
             if (map) {
 
+                //Map size
+                map_server_x = map.map.weight.w;
+                map_server_y = map.map.weight.w;
+                
+                //vertices has have a street or a bridge
+                var linked = [];
+                
                 //canvas manipulation                
                 var context = canvas.getContext('2d');
-                
+
                 //Draw map name
                 context.beginPath();
                 context.font = '30pt Calibri';
@@ -48,13 +57,15 @@ $(document).ready(function () {
                 {
                     //Get path
                     context.beginPath();
-                    var pa = map.map.streets[s].path[0]                    
+                    var pa = map.map.streets[s].path[0]
                     var pb = map.map.streets[s].path[1]
-                    
+                    linked.push(pa);
+                    linked.push(pb);
+
                     //Search the first path
                     for (var p in map.map.vertices)
                     {
-                        if(map.map.vertices[p].name === pa)
+                        if (map.map.vertices[p].name === pa)
                         {
                             var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
                             var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
@@ -62,27 +73,27 @@ $(document).ready(function () {
                             break;
                         }
                     }
-                    
+
                     //Search the second path
                     for (var p in map.map.vertices)
                     {
-                        if(map.map.vertices[p].name === pb)
+                        if (map.map.vertices[p].name === pb)
                         {
                             var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
-                            var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);                            
+                            var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
                             context.lineTo(xScale, yScale);
                             break;
                         }
-                    }                    
-                    
+                    }
+
                     context.lineWidth = 7;
                     context.strokeStyle = '#F5D0A9';
                     context.lineCap = 'round';
                     context.stroke();
                     context.fill();
-                    context.closePath();                   
+                    context.closePath();
                 }
-                
+
                 //Draw vertices
                 for (var p in map.map.vertices)
                 {
@@ -98,7 +109,7 @@ $(document).ready(function () {
                     context.arc(xScale, yScale, 20, 0, Math.PI * 2, 0);
                     context.fill();
                     context.closePath();
-                    
+
                     //Draw name
                     context.beginPath();
                     context.font = '20pt Calibri';
@@ -107,9 +118,12 @@ $(document).ready(function () {
                     context.fill();
                     context.closePath();
                 }
+                
+                console.log(linked);
             }
         }
-    };
+    }
+    ;
 
     $('.enter_link').click(function () {
         $(this).parent().fadeOut(300);
