@@ -71,7 +71,7 @@ def get_url_of_webservices_cab():
 # The client SocketIO
 #
 
-#the first sio connection
+#the sio connection
 @socketio.on('connect', namespace='/client')
 def client_connect():
     for i in range(0,3):
@@ -83,8 +83,10 @@ def client_connect():
             break
     if i != -1:
         print 'Too many client connected'
-        #TODO Close socket    
-
+        #TODO Close socket 
+    if clients_slots[0] == False and clients_slots[1] == False and clients_slots[2] == False:
+            emit('new map is available', broadcast=True)
+        
 
 #the end of sio deconnection
 @socketio.on('disconnect', namespace='/client')
