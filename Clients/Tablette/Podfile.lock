@@ -1,0 +1,25 @@
+PODS:
+  - JSONJoy-Swift (1.0.0)
+  - Socket.IO-Client-Swift (3.1.6)
+  - SwiftyJSON (2.3.0)
+
+DEPENDENCIES:
+  - JSONJoy-Swift (~> 1.0.0)
+  - Socket.IO-Client-Swift (~> 3.1.4)
+  - SwiftyJSON (from `https://github.com/SwiftyJSON/SwiftyJSON.git`)
+
+EXTERNAL SOURCES:
+  SwiftyJSON:
+    :git: https://github.com/SwiftyJSON/SwiftyJSON.git
+
+CHECKOUT OPTIONS:
+  SwiftyJSON:
+    :commit: 83dc3138b14571200ea7f070933a2a510491e997
+    :git: https://github.com/SwiftyJSON/SwiftyJSON.git
+
+SPEC CHECKSUMS:
+  JSONJoy-Swift: 3e8129c282470614da69759208e9c923732f6cb4
+  Socket.IO-Client-Swift: f80e4eec9f067ced71fbcdbfa55bf59ff0248e53
+  SwiftyJSON: cacfe0373d584585716bd1d43202c24cc66afd65
+
+COCOAPODS: 0.39.0
