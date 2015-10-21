@@ -4,6 +4,8 @@
 #include <Ethernet.h>
 #include <SPI.h>
 #include <WebSocketClient.h>
+//#include <StackArray.h>
+#include <QueueArray.h>
 
 byte mac[] = { 0x98, 0x4F, 0xEE, 0x05, 0x32, 0x87 }; // Gali 11
 
@@ -13,19 +15,27 @@ IPAddress dns(192,168,1,1); // ip
 IPAddress gateway(192,168,1,1); // ip
 IPAddress subnet(255,255,255,0); // ip
 
-// function definitions
+// declaration des fonction de parsing JSON
 char* parseJsonVertex(char *jsonString) ;
 int parseJsonId(char *jsonString) ;
-char* parseJsonAvailable(char *jsonString) ;
-
-char trame[] = "{\"vertex\":\"b\",\"id\":\"0\", \"available\":\"false\"}";
+int parseJsonTraveled(char *jsonString) ;
+   
+//exemple de trame                            
+char trame[] = "{\"vertex\":\"b\",\"id\":\"0\", \"traveled\":\"10\"}";
 char jsonString[] = "{\"query\":{\"count\":1,\"created\":\"2012-08-04T14:46:03Z\",\"lang\":\"en-US\",\"results\":{\"item\":{\"title\":\"Handling FTP usernames with @ in them\"}}}}";
-char trame_retour[] = "{\"accepted\":true,\"vertex\":\"a\",\"id\":0}";
+char trame_retour[] = "{\"accepted\":false,\"vertex\":\"a\",\"id\":9}";
+char* msg;
 
+//variable contenant les elements des trames
 char * trameVertex;
 int trameId;
-char * trameAvailable;
+int trameTraveled=0;
+char * trameAvailable="true";
 
+//la file d'attente des demandes pour le taxi
+QueueArray <char*> stack; 
+
+//on delcare l'adresse du serveur et le port d'ecoute
 char server[] = "192.168.1.1";
 int port = 9741;
 
@@ -55,6 +65,8 @@ int read_LCD_buttons()
  if (adc_key_in < 50)   return btnRIGHT;  
  
  if (adc_key_in < 650)  return btnLEFT; 
+ 
+ if (adc_key_in < 790)  return btnSELECT;
   
 
  return btnNONE;  // when all others fail, return this...
@@ -88,7 +100,7 @@ void setup() {
   client.onMessage(onMessage);
   client.onError(onError);
 
-  lcd->print(trameVertex); // print a simple message
+  
 }
 
 
@@ -117,10 +129,10 @@ char* parseJsonVertex(char *jsonString)
 }
 
 
-//parsing de la trame(valeur du vertex)
+//parsing de la trame(valeur de l'id)
 int parseJsonId(char *jsonString) 
 {
-     int  value;
+    int value;
 
     aJsonObject* root = aJson.parse(jsonString);
 
@@ -129,6 +141,31 @@ int parseJsonId(char *jsonString)
         aJsonObject* vertex = aJson.getObjectItem(root, "id"); 
 
              if (vertex != NULL) {
+                 //Serial.println("Parsed successfully 5 " );
+                 value = vertex->valueint;
+             }
+    }
+
+    if (value) {
+        return value;
+    } else {
+        return NULL;
+    }
+}
+
+//parsing de la trame(valeur de la distance parcourur)
+int parseJsonTraveled(char *jsonString) 
+{
+    int value;
+
+    aJsonObject* root = aJson.parse(jsonString);
+
+    if (root != NULL) {
+        //Serial.println("Parsed successfully 1 " );
+        aJsonObject* vertex = aJson.getObjectItem(root, "traveled"); 
+
+             if (vertex != NULL) {
+                 //Serial.println("Parsed successfully 5 " );
                  value = vertex->valueint;
              }
     }
@@ -141,7 +178,7 @@ int parseJsonId(char *jsonString)
 }
 
 //parsing de la trame(valeur du vertex)
-char* parseJsonAvailable(char *jsonString) 
+char * parseJsonAvailable(char *jsonString) 
 {
     char* value;
 
@@ -149,7 +186,7 @@ char* parseJsonAvailable(char *jsonString)
 
     if (root != NULL) {
         //Serial.println("Parsed successfully 1 " );
-        aJsonObject* vertex = aJson.getObjectItem(root, "available"); 
+        aJsonObject* vertex = aJson.getObjectItem(root, "traveled"); 
 
              if (vertex != NULL) {
                  //Serial.println("Parsed successfully 5 " );
@@ -165,55 +202,119 @@ char* parseJsonAvailable(char *jsonString)
 }
 
 
-
+//fonction loop
+//la fonction rappelé à chaque fois
 void loop() {
-  
-  //a chaque tour, envoi d'un msg
-   client.send("{\"get status\":true}");
-  
-  
   client.monitor();
   
   
+  lcd->setCursor(0,0);
+  lcd->print("traveled:");
+  lcd->print(trameTraveled);
+  lcd->setCursor(12,0);
+  lcd->print("p:");
+  lcd->print(String(trameTraveled));
   
   //gestion des bouton
-  lcd->setCursor(9,1);            // move cursor to second line "1" and 9 spaces over
-  lcd->print(millis()/1000);      // display seconds elapsed since power-up
-
-
+  
+  
   lcd->setCursor(0,1);            // move to the begining of the second line
   lcd_key = read_LCD_buttons();  // read the buttons
+  
+  
   
   switch (lcd_key)               // depending on which button was pushed, we perform an action
  {
    case btnRIGHT:
      {
-     lcd->print("OUI ");
-     //client.send("OUI");
-     //char trame_retour[] = {"accepted":true,"vertex":"a","id":0}
-     //trameVertex=parseJsonVertex(trame);
-     //trameId=parseJsonId(trame);
-     String  retour = "{\"accepted\":true,"; retour+="\"vertex\":\""; 
-     retour+=String(trameVertex); retour+="\",\"id\":";retour+=String(trameId);retour+="}\r\n";
+       if(trameAvailable="true")
+       {
+             lcd->print("OUI ");
+         //client.send("OUI");
+         //char trame_retour[] = {"accepted":true,"vertex":"a","id":0}
+         //trameVertex=parseJsonVertex(trame);
+         //trameId=parseJsonId(trame);
+         
+         String  retour = "{\"accepted\":true,"; retour+="\"vertex\":\""; 
+         retour+=String(trameVertex); retour+="\",\"id\":";retour+=String(trameId);retour+="}\r\n";
+         
+         retour.toCharArray(trame_retour,42);
+         
+         client.send(trame_retour);
+         
+         msg = new char[255]; 
+         msg = stack.pop(); 
+      
+         trameVertex = parseJsonVertex(msg);
+         trameId = parseJsonId(msg);
+         trameAvailable = parseJsonAvailable(msg);
+         
+         lcd->setCursor(9,1);            // move cursor to second line "1" and 9 spaces over
+         //lcd->print(millis()/1000);      // display seconds elapsed since power-up
+         lcd->print("Pile:");
+         lcd->setCursor(15,1);
+         lcd->print(String(stack.count()));  
+       }
+       else
+       {
+       lcd->print("non disponible");
+       }
      
-     retour.toCharArray(trame_retour,42);
-     
-     client.send(trame_retour);
      
      break;
      }
    case btnLEFT:
      {
-     lcd->print("NON   ");
-     //client.send("NON");
-     //trameVertex=parseJsonVertex(trame);
-     //trameId=parseJsonId(trame);
-     String  retour = "{\"accepted\":false,"; retour+="\"vertex\":\""; 
-     retour+=String(trameVertex); retour+="\",\"id\":";retour+=String(trameId);retour+="}\r\n";
+       if(trameAvailable="true")
+       {
+         lcd->print("NON   ");
+         //client.send("NON");
+         //trameVertex=parseJsonVertex(trame);
+         //trameId=parseJsonId(trame);
+         
+         String  retour = "{\"accepted\":false,"; retour+="\"vertex\":\""; 
+         retour+=String(trameVertex); retour+="\",\"id\":";retour+=String(trameId);retour+="}\r\n";
+         
+         retour.toCharArray(trame_retour,42);
+         
+         client.send(trame_retour);
+         
+         msg = new char[255]; 
+         msg = stack.pop(); 
+      
+         trameVertex = parseJsonVertex(msg);
+         trameId = parseJsonId(msg);
+         trameAvailable = parseJsonAvailable(msg);
+         
+         lcd->setCursor(9,1);            // move cursor to second line "1" and 9 spaces over
+         //lcd->print(millis()/1000);      // display seconds elapsed since power-up
+         lcd->print("Pile:");
+         lcd->setCursor(15,1);
+         lcd->print(String(stack.count()));  
+       }
+       else
+       {
+       lcd->print("non disponible");
+       }
+     break;
+     }
      
-     retour.toCharArray(trame_retour,42);
-     
-     client.send(trame_retour);
+     case btnSELECT:
+     {
+       
+     lcd->setCursor(9,1);            // move cursor to second line "1" and 9 spaces over
+     //lcd->print(millis()/1000);      // display seconds elapsed since power-up
+     lcd->print("Pile:");
+     lcd->setCursor(15,1);
+     lcd->print(String(stack.count()));  
+       
+     msg = new char[255]; 
+     msg = stack.pop(); 
+  
+     trameVertex = parseJsonVertex(msg);
+     trameId = parseJsonId(msg);
+     trameAvailable = parseJsonAvailable(msg);
+  
      
      break;
      }
@@ -230,8 +331,10 @@ void onMessage(WebSocketClient client, char* message) {
   Serial.print("Received: "); Serial.println(message);
  
   //on parse direct
+  trameVertex = "";
   trameVertex = parseJsonVertex(message);
   trameId = parseJsonId(message);
+  trameTraveled = parseJsonTraveled(message);
   trameAvailable = parseJsonAvailable(message);
   
   //on affiche la destinarion sur l'ecran lcd
@@ -239,6 +342,15 @@ void onMessage(WebSocketClient client, char* message) {
   lcd->print("destination:");
   lcd->setCursor(13,0);  
   lcd->print(trameVertex);
+  
+  //on stock le message dans la pile
+  if(trameVertex != "")
+  {
+    stack.push(message);
+  }
+  
+  
+  
 }
 
 void onError(WebSocketClient client, char* message) {
