@@ -20,7 +20,7 @@ class MapManager:
                         },
                         "vertices": [
                             {
-                                "name": "m",
+                                "name": "a",
                                 "x": 0.5,
                                 "y": 0.5
                             },
@@ -35,51 +35,52 @@ class MapManager:
                                 "y": 0.6
                             },
                             {
-                                "name": "a",
+                                "name": "d",
                                 "x": 0.7,
                                 "y": 0.5
                             },
                             {
-                                "name": "d",
+                                "name": "e",
                                 "x": 0.4,
                                 "y": 0.75
                             },
                             {
-                                "name": "v",
+                                "name": "f",
                                 "x": 0.5,
                                 "y": 1
+                            },
+                            {
+                                "name": "g",
+                                "x": 0.4,
+                                "y": 0.2
                             }
                         ],
                         "streets": [
                             {
-                                "name": "mb",
-                                "path": [
-                                    "m",
-                                    "b"
-                                ],
-                                "oneway": False
-                            },{
-                                "name": "bd",
+                                "name": "ba",
                                 "path": [
                                     "b",
-                                    "d"
+                                    "a"
                                 ],
                                 "oneway": False
-                            },{
+                            },
+                             {
+                                "name": "ag",
+                                "path": [
+                                    "a",
+                                    "g"
+                                ],
+                                "oneway": False
+                            },
+                            {
                                 "name": "bc",
                                 "path": [
                                     "b",
                                     "c"
                                 ],
                                 "oneway": False
-                            },{
-                                "name": "cd",
-                                "path": [
-                                    "c",
-                                    "d"
-                                ],
-                                "oneway": False
-                            },{
+                            },
+                            {
                                 "name": "da",
                                 "path": [
                                     "d",
@@ -87,20 +88,41 @@ class MapManager:
                                 ],
                                 "oneway": False
                             },{
-                                "name": "dv",
+                                "name": "ae",
                                 "path": [
-                                    "d",
-                                    "v"
+                                    "a",
+                                    "e"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "ce",
+                                "path": [
+                                    "c",
+                                    "e"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "ef",
+                                "path": [
+                                    "e",
+                                    "f"
                                 ],
                                 "oneway": False
                             }
                         ],
                         "bridges": [
                             {
-                                "from": "v",
+                                "from": "f",
                                 "to": {
                                     "area": "Quartier Sud",
                                     "vertex": "h"
+                                },
+                                "weight": 2
+                            },{
+                                "from": "d",
+                                "to": {
+                                    "area": "Quartier Est",
+                                    "vertex": "i"
                                 },
                                 "weight": 2
                             }
@@ -116,7 +138,7 @@ class MapManager:
                         },
                         "vertices": [
                             {
-                                "name": "a",
+                                "name": "z",
                                 "x": 1,
                                 "y": 1
                             },
@@ -133,9 +155,9 @@ class MapManager:
                         ],
                         "streets": [
                             {
-                                "name": "ah",
+                                "name": "zh",
                                 "path": [
-                                    "a",
+                                    "z",
                                     "h"
                                 ],
                                 "oneway": False
@@ -154,7 +176,7 @@ class MapManager:
                                 "from": "h",
                                 "to": {
                                     "area": "Quartier Nord",
-                                    "vertex": "b"
+                                    "vertex": "f"
                                 },
                                 "weight": 2
                             }
@@ -170,21 +192,21 @@ class MapManager:
                         },
                         "vertices": [
                             {
-                                "name": "a",
-                                "x": 0.75,
-                                "y": 0.65
+                                "name": "i",
+                                "x": 0.1,
+                                "y": 0.5
                             },
                             {
-                                "name": "i",
+                                "name": "j",
                                 "x": 0.55,
                                 "y": 1
                             }
                         ],
                         "streets": [
                             {
-                                "name": "ai",
+                                "name": "ji",
                                 "path": [
-                                    "a",
+                                    "j",
                                     "i"
                                 ],
                                 "oneway": False
@@ -194,8 +216,8 @@ class MapManager:
                             {
                                 "from": "i",
                                 "to": {
-                                    "area": "Quartier Sud",
-                                    "vertex": "h"
+                                    "area": "Quartier Nord",
+                                    "vertex": "d"
                                 },
                                 "weight": 2
                             }
@@ -207,22 +229,11 @@ class MapManager:
         
         self.cabs = [
                 {
-                    "available": False,
-                    "moving": False,
-                    "position": 
-                    {
-                        "vertex": "m",
-                        "area": "Quartier Nord",
-                    },
-                    "target": 
-                    {
-                        "vertex": "m",
-                        "area": "Quartier Nord",
-                    }, 
-                    "travelled": 
-                    {
-                        "nbOfVertices": 1,
-                    }
+                    "available": True,
+                    "accepted": True,
+                    "position": "a",
+                    "target": "a",
+                    "travelled": 1
                 }]
     
     
@@ -270,9 +281,10 @@ class MapManager:
     
     
     def remove_cab(self, cabId):
-        if cabs[cabId] in cabs: cabs.remove(cabs[cabId])
+        if self.cabs[cabId] in self.cabs: self.cabs.remove(self.cabs[cabId])
+
         
     def move_cab(self, cabId, newVertex):
-        if cabs[cabId] in cabs: 
-            cabs[cabId]['position'] = newVertex
+        if self.cabs[cabId] in self.cabs:
+            self.cabs[cabId]['position'] = newVertex
             

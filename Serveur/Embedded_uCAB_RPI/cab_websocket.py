@@ -1,24 +1,23 @@
 #
-# This is the main file of PI3A uCAB project:
-#
-# Basic comunication strategy:
-# All clients need a connection with this pyrhon server.
-# This server use the flask socket-io (websocket based) protocol 
+# Base class for websocket communiction between raspi and gallileo
 #
 #@author : mingar
 #
+
+
 
 from flask import *
 from flask.ext.socketio import *
 from map_manipulation import *
 from threading import Thread
+import json
+import time
 from fonction_pathfinder import *
 from cab_websocket import *
 from SimpleWebSocketServer import *
 import signal
 import sys
-import json
-import time
+import threading
 
 app = Flask(__name__)
 #Don't print HTTP logs
@@ -78,7 +77,7 @@ def background_thread():
 
 
 #The root URL ------------------------------------------------------------------
-@app.route('/')
+@app.route('/client')
 def index():    
     global thread
     if thread is None:
@@ -92,13 +91,13 @@ def index():
 
 
 #The device URL
-@app.route('/client')
+@app.route('/clientsio')
 def get_url_of_webservices_clients():    
     return render_template('url.json.html', namespace='client')
 
 
 #The device URL
-@app.route('/cab')
+@app.route('/cabsio')
 def get_url_of_webservices_cab():    
     return render_template('url.json.html', namespace='cab')
 
@@ -156,6 +155,7 @@ def client_set_new_target(message):
 # The CAB WebSocket ------------------------------------------------------------
 #
 
+
 clients = []
 def broadcastMsgToCabs(msg):
         print 'broadcastMsg'
@@ -196,7 +196,6 @@ class CabWS(WebSocket):
         print (u'CAB disconnected : ' + self.address[0])
         nb_of_cab-=1
 
-
 """
 #the cab agrees to retrieve client
 @socketio.on('cab ok', namespace='/cab')
@@ -218,32 +217,35 @@ def thread_flask():
     
 
 if __name__ == '__main__':
-    
-    #Init SIGINT 
+
+    #Init SIGINT
     """
-    def close_sig_handler(signal, frame):      
+    def close_sig_handler(signal, frame):
         if server:
             server.close()
         if socketio.server:
-            socketio.server.stop();        
+            socketio.server.stop();
         sys.exit()
- 
+
 
     signal.signal(signal.SIGINT, close_sig_handler)
     """
-    print 'Server start !'  
+
+    print 'Server start !'
     cabsWS = CabWS
-    
+
     server = SimpleWebSocketServer('', 9741, cabsWS)
-    
+
     print 'Start Flask SocketIO server !'
     t1 = threading.Thread(target = thread_flask)
     t1.start()
-    
+
     print 'Server WS Cab start !'
-    server.serveforever()    
-        
+    server.serveforever()
+
     print 'Server stop !'
     t1.join()
     
     
+
+     

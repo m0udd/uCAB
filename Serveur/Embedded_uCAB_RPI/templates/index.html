@@ -8,6 +8,7 @@
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-1.0.0.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-0.9.9.js') }}"></script>
 
+
         <script type="text/javascript" charset="utf-8">
 
 $(document).ready(function () {
@@ -157,40 +158,37 @@ $(document).ready(function () {
                 {
                     for (var cab in map.map.cabs)
                     {
-                        if (map.map.cabs[cab].position.area === map.name)
+                        //Get the map area
+                        var vertexID = -1
+                        for(var v in map.map.vertices)
                         {
+                            if (map.map.vertices[v].name === map.map.cabs[cab].position)
+                            {
+                                vertexID = v;
+                            }
+                        }                            
+                        
+                        if (vertexID > -1)
+                        {
+                            //ouf, we have the vertex coordinate !
                             //Get the X and Y of the point
-                            var v = -1;
-                            for (var p in map.map.vertices)
-                            {
-                                if (map.map.vertices[p].name === map.map.cabs[cab].position.vertex)
-                                {
-                                    v = p;
-                                }
-                            }
-
-                            if (v > -1)
-                            {
-                                //ouf, we have the vertex coordinate !
-                                var xScale = Math.abs(map.map.vertices[v].x * $(window).width() / map_server_x - 50);
-                                var yScale = Math.abs(map.map.vertices[v].y * $(window).height() / map_server_y - 50);
-                                //load the cab pics
-                                var imageObj = new Image();
-                                context.beginPath();
-                                imageObj.onload = function () {
-                                    context.drawImage(imageObj, xScale - 25, yScale - 25, 50, 50);
-                                };
-                                imageObj.src = '{{ url_for('static', filename='img/cab.png') }}';
-                                context.fill();
-                                context.closePath();
-                            }
+                            var xScale = Math.abs(map.map.vertices[vertexID].x * $(window).width() / map_server_x - 50);
+                            var yScale = Math.abs(map.map.vertices[vertexID].y * $(window).height() / map_server_y - 50);
+                            //load the cab pics
+                            var imageObj = new Image();
+                            context.beginPath();
+                            imageObj.onload = function () {
+                                context.drawImage(imageObj, xScale - 25, yScale - 25, 50, 50);
+                            };
+                            imageObj.src = '{{ url_for('static', filename='img/cab.png') }}';
+                            context.fill();
+                            context.closePath();
                         }
                     }
                 }
             }
         }
-    }
-    ;
+    };
     
     //Namespace for client
     namespace = '/client';
@@ -238,7 +236,7 @@ $(document).ready(function () {
     // event handler for server sent data
     // the data is displayed in the "Received" section of the page
     socket.on('new map', function (msg) {
-        map = msg;
+        map = JSON.parse(msg);
         $('#log').append('<br>NEW MAP is receved');
         drawMap();
     });
