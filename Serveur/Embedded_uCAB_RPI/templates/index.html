@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+        <title>uCAB - PI3A</title>
+        <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.4.2.min.js') }}"></script>    
+        <script type="text/javascript" src="{{ url_for('static', filename='socket.io-1.0.0.js') }}"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='socket.io-0.9.9.js') }}"></script>
+        
+        <script type="text/javascript" charset="utf-8">
+function drawMap()
+{
+    var canvasDiv = document.getElementById('mapZone');
+    canvasDiv.setAttribute('width', $(window).width() - 25);
+    canvasDiv.setAttribute('height', $(window).height() - 25);
+    canvasDiv.setAttribute('style', "border:1px solid #000000;");
+}
+
+$(document).ready(function () {
+
+    var map_server_x = 1;
+    var map_server_y = 1;
+
+    $('.enter_link').click(function () {
+        $(this).parent().fadeOut(300);
+        //Show the map
+        window.onresize = drawMap;
+        drawMap();
+        //Add some style effect
+        $("#mapScreen").show("slow", function () {
+            //After effect         
+        });
+    });
+
+    //Namespace for client
+    namespace = '/client';
+
+    // the socket.io documentation recommends sending an explicit package upon connection
+    var socket = io.connect('http://' + document.domain + ':' + location.port + namespace);
+    socket.on('connect', function () {
+        //socket.emit('my event', {data: 'I\'m connected!'});
+        //todo : show a popup
+    });
+
+    //Get the mouse click and send to the server
+    $('#mapZone').click(function(e) {
+    //Get position     
+    var offset = $(this).offset();
+    var x = e.pageX - offset.left;
+    var y = e.pageY - offset.top;
+    //Normalize
+    x = x * map_server_x / $('#mapZone').width();
+    y = y * map_server_y / $('#mapZone').height();
+    //alert(x + ':' + y);
+    //Send to the server
+    socket.emit('new target', {"x": x, "y": y});  
+    socket.emit('cab ok', {'x': x, 'y': y});   
+    });
+  
+    // event handler for server sent data
+    // the data is displayed in the "Received" section of the page
+    socket.on('log', function (msg) {
+        $('#log').append('<br>LOG Received #' + msg.count + ': ' + msg.data);
+    });
+
+    // event handler for server sent data
+    // the data is displayed in the "Received" section of the page
+    socket.on('new map', function (msg) {
+        $('#log').append('<br>NEW MAP received : ' + msg.data);
+        drawMap();
+    });
+    
+    socket.on('new map is available', function (msg) {
+    $('#log').append('<br>NEW MAP is available : ' + msg.data);
+        socket.emit('get my map');        
+    });
+
+    // handlers for the different forms in the page
+    // these send data to the server in a variety of ways
+    $('form#get_map').submit(function (event) {
+        socket.emit('get my map');
+        return false;
+    });
+    $('form#send_position').submit(function (event) {
+        socket.emit('new target', {'x': $('#x').val(), 'y': $('#y').val()});
+        return false;
+    });
+
+});
+        </script>
+    </head>
+
+    <body>
+        <div id="splashscreen">
+            <style>
+                html,body{ margin:0; padding:0; height:100%; width:100%; }
+                #splashscreen {
+                    position: fixed;
+                    top: 30%;
+                    left: 30%;           
+                    height:100%;
+                    width:100%;
+                }
+            </style>
+
+            <img src="{{ url_for('static', filename='img/imerir.jpg') }}"  width="200" height="200" />
+            <a href="#" class="enter_link">
+                <img src="{{ url_for('static', filename='img/uCAB.png') }}" alt="Click here to enter" width="400" height="200"/>
+            </a>
+            <img src="{{ url_for('static', filename='img/raspberry.png') }}" width="200" height="200"/>    
+        </div>
+
+        <div id="mapScreen"> 
+
+            <style>
+                #mapScreen {
+                    overflow:hidden;
+                    display: none;
+                }
+            </style>
+
+            <canvas id="mapZone" width="200" height="100">
+                Your browser does not support the HTML5 canvas tag.
+            </canvas>
+            
+            <h2>Get MAP:</h2>
+            <form id="get_map" method="POST" action="#">
+                <input type="submit" value="Get map">
+            </form>            
+            <h2>Send Position:</h2>
+            <form id="send_position" method="POST" action='#'>
+                <input type="text" name="x" id="x" placeholder="X">
+                <input type="text" name="y" id="y" placeholder="Y">
+                <input type="submit" value="Send">
+            </form>
+            <h2>Receive:</h2>
+            <div id="log"></div>
+
+        </div>
+    </body>
+</html>
