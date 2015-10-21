@@ -11,14 +11,20 @@
 from flask import *
 from flask.ext.socketio import *
 from map_manipulation import *
-from threading import Thread
+import threading
 from fonction_pathfinder import *
-from cab_websocket import *
-from SimpleWebSocketServer import *
-import signal
-import sys
 import json
 import time
+import socket
+
+global response
+response = []
+global inMessage
+inMessage = []
+
+TCP_IP = '192.168.1.1'
+TCP_PORT = 9741
+BUFFER_SIZE = 1024
 
 app = Flask(__name__)
 #Don't print HTTP logs
@@ -26,8 +32,10 @@ app.logger.disabled = True
     
 app.config['SECRET_KEY'] = 'pass'
 socketio = SocketIO(app)
-thread = None
+thread = False
 
+global server
+server = None
 
 #it's ugly, TODO : fix it!
 global nb_of_cab
@@ -42,38 +50,39 @@ clients_slots = [True,True,True]
 # Websocket for Galileo --------------------------------------------------------
 #
 
-def echo_socket(ws):
-    while True:
-        message = ws.receive()
-        ws.send(message)
-
-
 #
 # Flask ------------------------------------------------------------------------
 #
     
 #This thread is used for moving cab (computation)
-def background_thread():
+def cab_thread():
     #Send an keep alive message every 5 seconds (for tests and debug)
     while True:
         time.sleep(2)
         #Cab motion
+        i=0
         for cab in map.cabs:
             if cab['accepted'] == True and cab['position'] != cab['target']:
                 #move the cab !
                 print 'background_thread -> from ', cab['position'], ' to ', cab['target']
-                nextNode = pluscourchemin(cab['position'], cab['target'], map.map)                
+                nextNode = pluscourchemin(cab['position'], cab['target'], map.map)
+                #increment the distance since the last course
                 cab['travelled'] += 1
-                cab['position'] = nextNode                
+                cab['position'] = nextNode
                 #Broadcast than that the map changed for all clients
                 socketio.emit('new map is available',namespace='/client')
-                
+                setCabState(i,False)
+
             else:
                 #end of motion ? update cab
                 #target reached
                 cab['accepted'] = False
-                cab['available'] = True
+                setCabState(i,True)
+                #set the distance since the last course to 0
                 cab['travelled'] = 0
+                #send the state cab is available
+            i+=1
+            #print server
         #socketio.emit('log', {'data': 'keep_alive'}, namespace='/client')
 
 
@@ -146,104 +155,97 @@ def client_set_new_target(message):
     #Set one available the cab
     for cab in map.cabs:
         if(cab['available'] == True):
-            cab['accepted'] = True #TODO fix it
             cab['target'] = target
     #Broadcast to the cab
-    broadcastMsgToCabs({'target': target}) 
+    #cabsWS.broadcastMsg(target)
+    broadcastMsgToCabs(target)
  
 
 #
 # The CAB WebSocket ------------------------------------------------------------
 #
-
+global clients
 clients = []
-def broadcastMsgToCabs(msg):
-        print 'broadcastMsg'
-        id=0
-        for client in list(clients):
-            id+=1
-            print 'Client : ', client
-            response = { "id" : id,"vertex": "a", "available":True }
-            client.sendMessage( unicode(json.dumps(response)) )
 
+def broadcastMsgToCabs(vertex):
+    print 'broadcastMsgToCabs'
+    id=0
+    resp = { "id" : id,"vertex": vertex, "travelled": map.cabs[id]["travelled"] }
+    response.append( resp )
+    id += 1
+
+def setCabState(id, state):
+    global map
+    #print 'snd : ', state
+    map.cabs[id]["accepted"] = state
+    resp = { "id" : id, "available": state }
+    #response.append( resp )
+
+'''
 class CabWS(WebSocket):
 
     def handleMessage(self):
         #the new message
-        print 'handleMessage'
-        for client in list(clients):
-            print self.data
-            if client != self:
-                print (self.address[0] + ' - ' + self.data)
+        cabResponse = json.loads(self.data)
+        setCabState(cabResponse['id'], cabResponse['accepted'])
+        print 'Cab with ID : ', cabResponse['id'], ' response : ', cabResponse['accepted'], \
+            ' for vertex : ', cabResponse['vertex']
 
-    def broadcastMsg(self, msg):
-        #the first cab's connection
-        print 'broadcastMsg'
-        for client in list(clients):
-            client.sendMessage(msg)
 
     def handleConnected(self):
         #the first cab's connection
-        print 'handleConnected'
         print (u'CAB connected : ' + self.address[0])
+        global clients
         clients.append(self)
-        self.broadcastMsg( unicode("{\"vertex\":\"b\",\"id\":\"0\", \"available\":\"false\"}") )
 
     def handleClose(self):
-        #the end of ws deconnection
-        print 'handleClose'
-        clients.remove(self)
         print (u'CAB disconnected : ' + self.address[0])
+        global clients
+        clients.remove(self)
+        #the end of ws deconnection
         nb_of_cab-=1
-
-
-"""
-#the cab agrees to retrieve client
-@socketio.on('cab ok', namespace='/cab')
-def client_set_new_target(message):
-    cab_id = int(session.get('id', 0))
-    x_target = message['x']
-    y_target = message['y']
-    print 'New target, cab with ID :', cab_id, 'set X = ', x_target, ' Y = ', y_target
-    #TODO compute vertice
-    #vertice_to_go = 
-    #map.set_cab_state(cab_id, False, True, +1, vertice_to_go )
-    #set the distance since the last course to 0
-    #map.set_cab_travelled(cab_id, 0, 0)
-    #Broadcast than that the map changed for all clients
-"""
-
-def thread_flask():
+'''
+def thread_io():
     socketio.run(app, host='0.0.0.0', port=9740)
-    
+
+#response.append(1)
+
+def thread_tcp_arduino():
+    global response
+    global inMessage
+    arduTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    arduTCP.bind(('0.0.0.0', 9741))
+    while 1:
+        arduTCP.listen(1)
+        conn, addr = arduTCP.accept()
+        print 'Connection Galileo address:', addr
+        response = []
+        inMessage = []
+        while 1:
+            print response
+            if len(response) > 0:
+                conn.send( json.dumps(response[0])+"\r\n" )
+                response.pop(0)
+            data = conn.recv(BUFFER_SIZE)
+            if not data: break
+            if data.find("loop") is not 0:
+                inMessage.append(data)
+        conn.close()
+
 
 if __name__ == '__main__':
-    
-    #Init SIGINT 
-    """
-    def close_sig_handler(signal, frame):      
-        if server:
-            server.close()
-        if socketio.server:
-            socketio.server.stop();        
-        sys.exit()
- 
 
-    signal.signal(signal.SIGINT, close_sig_handler)
-    """
-    print 'Server start !'  
-    cabsWS = CabWS
-    
-    server = SimpleWebSocketServer('', 9741, cabsWS)
-    
-    print 'Start Flask SocketIO server !'
-    t1 = threading.Thread(target = thread_flask)
-    t1.start()
-    
-    print 'Server WS Cab start !'
-    server.serveforever()    
-        
-    print 'Server stop !'
-    t1.join()
-    
-    
+    print 'Server cab thread !'
+    cabThread = threading.Thread(target = cab_thread)
+    cabThread.start()
+
+    print 'Server FlaskIO start !'
+    ioThread = threading.Thread(target = thread_io)
+    ioThread.start()
+
+    print 'Server Cab start !'
+    socketThread = threading.Thread(target = thread_tcp_arduino)
+    socketThread.start()
+
+    print 'Server stop, wait for all threads to terminate...'
+    cabThread.join()
