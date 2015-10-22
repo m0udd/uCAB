@@ -1,0 +1,6 @@
+framework module MTGeometry {
+  umbrella header "MTGeometry-umbrella.h"
+
+  export *
+  module * { export * }
+}

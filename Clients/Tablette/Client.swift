@@ -9,16 +9,21 @@
 import Foundation
 import Socket_IO_Client_Swift
 import SwiftyJSON
+import UIKit
 
 
 
-public class Client : WebSocketDelegate
+public class Client
 {
     
-    var name: String
-    var message: String = ""
-    var cercle = [CGPoint(x:0, y:0)]
+    var name : String = ""
     
+    // Dimension du point
+    let pointSize = CGSize(width: 30, height: 30)
+    
+    
+    var message: String = ""
+    public var cercle = [CGPoint(x: 0.0, y: 0.0)]
     let mySocket=SocketIOClient(socketURL: "192.168.2.1:9740")
     
     init(name: String = "John Doe")
@@ -28,7 +33,7 @@ public class Client : WebSocketDelegate
         topic()
         addNewMap()
     }
-    
+
     func connexionServeur()
         
     {
@@ -45,27 +50,10 @@ public class Client : WebSocketDelegate
                 // On parse la reponse en chaine de caractère
                 self.message = data[0] as! String
                 print(self.message)
-                
-                if let test = self.message.dataUsingEncoding(NSUTF8StringEncoding)
-                {
-                    print(" ")
-                    let json = JSON(data: test)
-                    
-                    // On récupère la taille des éléments
-                    let taille = json["map"]["vertices"].count
-                    
-                    print(taille)
-                    print("")
-                    
-                    
-                    for item in json["map"]["vertices"].arrayValue
-                    {
-                        let test = item["x"].floatValue
-                        print(test+2)
-                        
-                    }
-                }
+                self.ajoutCoordPoint(self.message)
         }
+        
+        
     }
     
     func sendNeedMap()
@@ -73,35 +61,84 @@ public class Client : WebSocketDelegate
         self.mySocket.emit("get my map")
     }
     
+    
     func topic()
     {
         self.mySocket.joinNamespace("/client")
     }
+    
     
     func dialogueServeur()
     {
         sendNeedMap()
     }
     
-    func ajoutCoordPoint()
+    
+    func ajoutCoordPoint(message: String)
     {
+        if let test = self.message.dataUsingEncoding(NSUTF8StringEncoding)
+        {
+            print(" ")
+            let json = JSON(data: test)
+            
+            // On récupère la taille des éléments
+            let taille = json["map"]["vertices"].count
+            
+            print(taille)
+            print("")
+            
+            
+            for item in json["map"]["vertices"].arrayValue
+            {
+                var i : Int = 0
+                let axeX = item["x"].floatValue
+                let axeY = item["y"].floatValue
+                
+                let coordX = self.reDimensionnementX(axeX)
+                let coordY = self.reDimensionnementX(axeY)
+                
+                print(coordX)
+                print(coordY)
+                
+                cercle[i].x = CGFloat(coordX)
+                cercle[i].y = CGFloat(coordY)
+                
+                
+                let newPoint = CGPoint(x: cercle[i].x, y: cercle[i].y)
+                let newCercle = UIBezierPath(ovalInRect: CGRect(origin: newPoint, size: pointSize))
+                newCercle.fill()
+                
+                
+                i++
+            }
+            
+        }
         
     }
     
-    public func websocketDidConnect(socket: WebSocket) {
-        print("websocket is connected")
+    
+    func reDimensionnementX(nombreX: Float)->Float
+    {
+        let maxServeur : Float = 1
+        let maxTablette  : Float = 750
+        
+        let resultAxeX : Float = (nombreX * maxTablette) / maxServeur
+        
+        return resultAxeX
+        
     }
     
-    public func websocketDidDisconnect(socket: WebSocket, error: NSError?) {
-        print("websocket is disconnected: \(error?.localizedDescription)")
+    
+    func reDimensionnementY(nombreY: Float)->Float
+    {
+        let maxServeur : Float = 1
+        let maxTablette  : Float = 1000
+        
+        let resultAxeY : Float = (nombreY * maxTablette) / maxServeur
+        
+        return resultAxeY
     }
     
-    public func websocketDidReceiveMessage(socket: WebSocket, text: String) {
-        print("got some text: \(text)")
-    }
     
-    public func websocketDidReceiveData(socket: WebSocket, data: NSData) {
-        print("got some data: \(data.length)")
-    }
-    
+
 }

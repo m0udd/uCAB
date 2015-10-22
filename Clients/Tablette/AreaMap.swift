@@ -8,69 +8,68 @@
 
 import Foundation
 import UIKit
+import Socket_IO_Client_Swift
+import SwiftyJSON
+
 
 class AreaMap: UIView
 {
+    
     // Tableau de point
-    var points = [CGPoint(x:50, y:50)]
+    var points = [CGPoint(x:0, y:0)]
     
-    
-    // Position premier point
+    // Dimension du point
     let pointSize = CGSize(width: 30, height: 30)
-   
+    
+    // INstenciation objet client
+    let monClient = Client()
+    
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    
+    // GRAPHIQUE
+    
+   ///////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
     // fonction de dessin surdefini
     override func drawRect(rect: CGRect)
     {
+        monClient.dialogueServeur()
+        remplirTablleau(monClient.cercle)
         
         
-        // Couleur de depart
-        UIColor.whiteColor().set()
-        
-        // on remplit la vue
-        UIRectFill(self.bounds)
-        
-        // Création de la ligne
-        let ligne = UIBezierPath()
-        
-        // Premier Point de la droite
-        var temp = CGPoint(x:50,y:50)
         
         
-        //On affiche a ce point
-        ligne.moveToPoint(temp)
-        
-        // Boucle pour chaque points
-        for point in points
+    }
+    
+    /////////////////////////////////////////////////////////////////////////
+    
+    // FONCTIONS
+    
+    /////////////////////////////////////////////////////////////////////////
+    
+    
+    func remplirTablleau(tableau: [CGPoint]) -> [CGPoint]
+    {
+        for var i = 0; i<self.monClient.cercle.capacity; i++
         {
-           
-            // On choisit la couleur rouge
-            UIColor.redColor().set()
+            let q = CGPoint(
+                x: self.monClient.cercle[i].x - pointSize.width/2,
+                y: self.monClient.cercle[i].y - pointSize.height/2)
             
-            // On crer bien le cercle au centre du point
-            let p = CGPoint(
-                x: point.x - pointSize.width/2,
-                y: point.y - pointSize.height/2
-            )
-            
-            // On dessine le cercle
-            let cercle = UIBezierPath(ovalInRect: CGRect(origin:p, size:pointSize))
-            cercle.fill()
-            
-            //ON affiche les points
-            print (points)
-            
-            // Coloration de la ligne
-            UIColor.blackColor().set()
 
-            // On relie le premier point au second
-            ligne.addLineToPoint(point)
+            points[i].x = q.x
+            points[i].y = q.y
+            print(points[i].x)
+            print(points[i].y)
             
-            // On récupere les coordonnees du point précedent
-            temp=point
         }
         
-        //On trace la ligne
-        ligne.stroke()
+        print("cont")
+        print(points.capacity)
+        
+        return points
     }
+    
 
 }

@@ -14,10 +14,10 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = 'primary'
-               BlueprintIdentifier = 'C93FB83761BCEE65C645F78F'
-               BlueprintName = 'Socket.IO-Client-Swift'
+               BlueprintIdentifier = '3076C8E6E3B40EF6DCD32AD1'
+               BlueprintName = 'MTGeometry'
                ReferencedContainer = 'container:Pods.xcodeproj'
-               BuildableName = 'Socket_IO_Client_Swift.framework'>
+               BuildableName = 'MTGeometry.framework'>
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

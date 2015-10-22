@@ -85,11 +85,13 @@ strip_invalid_archs() {
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
   install_framework "Pods/JSONJoy.framework"
+  install_framework "Pods/MTGeometry.framework"
   install_framework "Pods/Socket_IO_Client_Swift.framework"
   install_framework "Pods/SwiftyJSON.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
   install_framework "Pods/JSONJoy.framework"
+  install_framework "Pods/MTGeometry.framework"
   install_framework "Pods/Socket_IO_Client_Swift.framework"
   install_framework "Pods/SwiftyJSON.framework"
 fi

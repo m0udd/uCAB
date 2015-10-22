@@ -1,10 +1,12 @@
 PODS:
   - JSONJoy-Swift (1.0.0)
+  - MTGeometry (0.0.4)
   - Socket.IO-Client-Swift (3.1.6)
   - SwiftyJSON (2.3.0)
 
 DEPENDENCIES:
   - JSONJoy-Swift (~> 1.0.0)
+  - MTGeometry
   - Socket.IO-Client-Swift (~> 3.1.4)
   - SwiftyJSON (from `https://github.com/SwiftyJSON/SwiftyJSON.git`)
 
@@ -19,6 +21,7 @@ CHECKOUT OPTIONS:
 
 SPEC CHECKSUMS:
   JSONJoy-Swift: 3e8129c282470614da69759208e9c923732f6cb4
+  MTGeometry: 4aeed13a86a22a43150d1ffb57e35bf2ca25ff61
   Socket.IO-Client-Swift: f80e4eec9f067ced71fbcdbfa55bf59ff0248e53
   SwiftyJSON: cacfe0373d584585716bd1d43202c24cc66afd65
 

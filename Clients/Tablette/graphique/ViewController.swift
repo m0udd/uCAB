@@ -23,8 +23,6 @@ class ViewController: UIViewController {
     let monClient = Client()
     
     @IBAction func Connexion(sender: AnyObject) {
-        
-        monClient.dialogueServeur()
     }
     
     // A chaque clic de la souris sur la surface aréa
