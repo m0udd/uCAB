@@ -34,10 +34,9 @@ app.config['SECRET_KEY'] = 'pass'
 socketio = SocketIO(app)
 thread = False
 
+#it's ugly, TODO : fix it!
 global server
 server = None
-
-#it's ugly, TODO : fix it!
 global nb_of_cab
 nb_of_cab = 0
 global map 
@@ -47,11 +46,7 @@ global clients_slots
 clients_slots = [True,True,True]
 
 #
-# Websocket for Galileo --------------------------------------------------------
-#
-
-#
-# Flask ------------------------------------------------------------------------
+# Thread worker ----------------------------------------------------------------
 #
     
 #This thread is used for moving cab (computation)
@@ -85,8 +80,11 @@ def cab_thread():
             #print server
         #socketio.emit('log', {'data': 'keep_alive'}, namespace='/client')
 
+#
+# Flask ------------------------------------------------------------------------
+#
 
-#The root URL ------------------------------------------------------------------
+#The root URL
 @app.route('/')
 def index():    
     global thread
@@ -139,7 +137,7 @@ def client_disconnect():
     print('Client disconnected, ID : ' + str(session.get('id', 0)))
 
 
-#the client wishes receive its map   
+#the client wishes receive its map 
 @socketio.on('get my map', namespace='/client')
 def client_get_map():
     if clients_slots[0] == False and clients_slots[1] == False and clients_slots[2] == False:
@@ -164,16 +162,18 @@ def client_set_new_target(message):
 #
 # The CAB WebSocket ------------------------------------------------------------
 #
-global clients
-clients = []
 
+
+#Called when we need to to send the 
+#new target to the connected cab
 def broadcastMsgToCabs(vertex):
     print 'broadcastMsgToCabs'
     id=0
     resp = { "id" : id,"vertex": vertex, "travelled": map.cabs[id]["travelled"] }
     response.append( resp )
     id += 1
-
+    
+#Send the cab state
 def setCabState(id, state):
     global map
     #print 'snd : ', state
@@ -205,20 +205,26 @@ class CabWS(WebSocket):
         #the end of ws deconnection
         nb_of_cab-=1
 '''
+
+#The Flask SocketIO thread
 def thread_io():
     socketio.run(app, host='0.0.0.0', port=9740)
 
 #response.append(1)
 
+#The TCP thread
 def thread_tcp_arduino():
     global response
     global inMessage
+    #start the TCP server
     arduTCP = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #bind the TCP server
     arduTCP.bind(('0.0.0.0', 9741))
-    while 1:
+    while 1:        
         arduTCP.listen(1)
         conn, addr = arduTCP.accept()
         print 'Connection Galileo address:', addr
+        #Clear the global list
         response = []
         inMessage = []
         while 1:
@@ -227,7 +233,7 @@ def thread_tcp_arduino():
                 conn.send( json.dumps(response[0])+"\r\n" )
                 response.pop(0)
             data = conn.recv(BUFFER_SIZE)
-            if not data: break
+            if not data: break #client disconnected
             if data.find("loop") is not 0:
                 inMessage.append(data)
         conn.close()
@@ -249,3 +255,5 @@ if __name__ == '__main__':
 
     print 'Server stop, wait for all threads to terminate...'
     cabThread.join()
+    ioThread.join()
+    socketThread.join()

@@ -4,8 +4,6 @@
 #@author : mingar
 #
 
-
-
 from flask import *
 from flask.ext.socketio import *
 from map_manipulation import *
