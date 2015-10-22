@@ -4,6 +4,8 @@
 #@author : mingar
 #
 
+import json
+
 class MapManager:
     
     def __init__(self):
@@ -18,32 +20,109 @@ class MapManager:
                         },
                         "vertices": [
                             {
-                                "name": "m",
+                                "name": "a",
                                 "x": 0.5,
                                 "y": 0.5
                             },
                             {
                                 "name": "b",
+                                "x": 0.1,
+                                "y": 0.2
+                            },
+                            {
+                                "name": "c",
+                                "x": 0.15,
+                                "y": 0.6
+                            },
+                            {
+                                "name": "d",
+                                "x": 0.7,
+                                "y": 0.5
+                            },
+                            {
+                                "name": "e",
+                                "x": 0.4,
+                                "y": 0.75
+                            },
+                            {
+                                "name": "f",
                                 "x": 0.5,
                                 "y": 1
+                            },
+                            {
+                                "name": "g",
+                                "x": 0.4,
+                                "y": 0.2
                             }
                         ],
                         "streets": [
                             {
-                                "name": "mb",
+                                "name": "ba",
                                 "path": [
-                                    "m",
-                                    "b"
+                                    "b",
+                                    "a"
+                                ],
+                                "oneway": False
+                            },
+                             {
+                                "name": "ag",
+                                "path": [
+                                    "a",
+                                    "g"
+                                ],
+                                "oneway": False
+                            },
+                            {
+                                "name": "bc",
+                                "path": [
+                                    "b",
+                                    "c"
+                                ],
+                                "oneway": False
+                            },
+                            {
+                                "name": "da",
+                                "path": [
+                                    "d",
+                                    "a"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "ae",
+                                "path": [
+                                    "a",
+                                    "e"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "ce",
+                                "path": [
+                                    "c",
+                                    "e"
+                                ],
+                                "oneway": False
+                            },{
+                                "name": "ef",
+                                "path": [
+                                    "e",
+                                    "f"
                                 ],
                                 "oneway": False
                             }
                         ],
                         "bridges": [
                             {
-                                "from": "b",
+                                "from": "f",
                                 "to": {
                                     "area": "Quartier Sud",
                                     "vertex": "h"
+                                },
+                                "weight": 2
+                            },{
+                                "from": "d",
+                                "to": {
+                                    "area": "Quartier Est",
+                                    "vertex": "i"
                                 },
                                 "weight": 2
                             }
@@ -59,7 +138,7 @@ class MapManager:
                         },
                         "vertices": [
                             {
-                                "name": "a",
+                                "name": "z",
                                 "x": 1,
                                 "y": 1
                             },
@@ -76,9 +155,9 @@ class MapManager:
                         ],
                         "streets": [
                             {
-                                "name": "ah",
+                                "name": "zh",
                                 "path": [
-                                    "a",
+                                    "z",
                                     "h"
                                 ],
                                 "oneway": False
@@ -97,7 +176,7 @@ class MapManager:
                                 "from": "h",
                                 "to": {
                                     "area": "Quartier Nord",
-                                    "vertex": "b"
+                                    "vertex": "f"
                                 },
                                 "weight": 2
                             }
@@ -113,21 +192,21 @@ class MapManager:
                         },
                         "vertices": [
                             {
-                                "name": "a",
-                                "x": 0.75,
-                                "y": 0.65
+                                "name": "i",
+                                "x": 0.1,
+                                "y": 0.5
                             },
                             {
-                                "name": "i",
+                                "name": "j",
                                 "x": 0.55,
                                 "y": 1
                             }
                         ],
                         "streets": [
                             {
-                                "name": "ai",
+                                "name": "ji",
                                 "path": [
-                                    "a",
+                                    "j",
                                     "i"
                                 ],
                                 "oneway": False
@@ -137,74 +216,75 @@ class MapManager:
                             {
                                 "from": "i",
                                 "to": {
-                                    "area": "Quartier Sud",
-                                    "vertex": "h"
+                                    "area": "Quartier Nord",
+                                    "vertex": "d"
                                 },
                                 "weight": 2
                             }
                         ]
                     }
                 }
-            ],
-            "cabs":[
-            {
-                "available": False,
-                "moving": False,
-                "queue": 0,
-                "position": 
-                {
-                    "x": 0,
-                    "y": 0
-                }, 
-                "target": 
-                {
-                    "x": 0,
-                    "y": 0
-                }, 
-                "travelled": 
-                {
-                    "x": 0,
-                    "y": 0
-                }
-            }]
+            ]            
         }]
-
+        
+        self.cabs = [
+                {
+                    "available": True,
+                    "accepted": True,
+                    "position": "a",
+                    "target": "a",
+                    "travelled": 1
+                }]
+    
+    
     #Convert all json to a string
     def json_to_str_map(self):
         return json.dumps(self.map[0], ensure_ascii=False)
 
     #Convert only a user json to a string    
     def json_to_str_map(self, id):
-        if id > len(self.map['areas']):
-            id = len(self.map['areas'])
+        if id > len(self.map[0]['areas']):
+            id = len(self.map[0]['areas'])
         return json.dumps(self.map[0]['areas'][id], ensure_ascii=False)
 
-    def set_cab_state(self, id, isAvailable, isMoving, addToQueue, x_target, y_target):
+    def set_cab_state(self, id, isAvailable, isMoving, addToQueue, vertice_to_go):
         #update the cab's state 
         self.map[0]['cabs'][id]['available'] = isAvailable
         self.map[0]['cabs'][id]['moving'] = isMoving
         self.map[0]['cabs'][id]['queue'] = self.map[0]['cabs'][id]['queue'] + addToQueue
         #update the traget    
-        self.map[0]['cabs'][id]['target']['x'] = x_target
-        self.map[0]['cabs'][id]['target']['y'] = y_target   
+        self.map[0]['cabs'][id]['target']['vertice'] = vertice_to_go
+
+    def set_cab_position(self, id, vertice):
+        self.map[0]['cabs'][id]['position']['vertice'] = vertice
 
 
-    def set_cab_position(self, id, x, y):
+    def set_cab_target(self, id, vertice):
+        self.map[0]['cabs'][id]['target']['vertice'] = vertice
+
+
+    def set_cab_travelled(self, id, vertice):
         #set the distance since the last course to 0
-        self.map[0]['cabs'][id]['position']['x'] = x
-        self.map[0]['cabs'][id]['position']['y'] = y
+        self.map[0]['cabs'][id]['travelled']['vertice'] = vertice
 
-    def set_cab_target(self, id, x, y):
-        #set the distance since the last course to 0
-        self.map[0]['cabs'][id]['target']['x'] = x
-        self.map[0]['cabs'][id]['target']['y'] = y
-
-    def set_cab_travelled(self, id, x, y):
-        #set the distance since the last course to 0
-        self.map[0]['cabs'][id]['travelled']['x'] = x
-        self.map[0]['cabs'][id]['travelled']['y'] = y
 
     def print_all_cab(self):
         print '---'
         print self.map[0]['cabs']
         print '---'
+
+
+    def get_map(self, id):
+        newMap = self.map[0]['areas'][id]
+        newMap['map']['cabs'] = self.cabs
+        return newMap
+    
+    
+    def remove_cab(self, cabId):
+        if self.cabs[cabId] in self.cabs: self.cabs.remove(self.cabs[cabId])
+
+        
+    def move_cab(self, cabId, newVertex):
+        if self.cabs[cabId] in self.cabs:
+            self.cabs[cabId]['position'] = newVertex
+            

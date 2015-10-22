@@ -1,37 +1,195 @@
 <!DOCTYPE HTML>
 <html>
     <head>
-        <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
         <title>uCAB - PI3A</title>
+        <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}">        
         <script type="text/javascript" src="{{ url_for('static', filename='jquery-1.4.2.min.js') }}"></script>    
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-1.0.0.js') }}"></script>
         <script type="text/javascript" src="{{ url_for('static', filename='socket.io-0.9.9.js') }}"></script>
-        
+
+
         <script type="text/javascript" charset="utf-8">
-function drawMap()
-{
-    var canvasDiv = document.getElementById('mapZone');
-    canvasDiv.setAttribute('width', $(window).width() - 25);
-    canvasDiv.setAttribute('height', $(window).height() - 25);
-    canvasDiv.setAttribute('style', "border:1px solid #000000;");
-}
 
 $(document).ready(function () {
+
+    var map;
 
     var map_server_x = 1;
     var map_server_y = 1;
 
-    $('.enter_link').click(function () {
-        $(this).parent().fadeOut(300);
-        //Show the map
-        window.onresize = drawMap;
-        drawMap();
-        //Add some style effect
-        $("#mapScreen").show("slow", function () {
-            //After effect         
-        });
-    });
+    //vertices has have a street or a bridge
+    var linked = [];
 
+
+    function countOccur(obj) {
+        var occur = 0;
+        for (var i = 0; i < linked.length; i++) {
+            if (linked[i] === obj)
+                if (++occur > 1)
+                    return occur;
+        }
+        return occur;
+    }
+
+    function isMultiLinkedVervex(name)
+    {
+        //is the vertex is linked more than one times?
+        if (countOccur(name) > 1)
+            return true;
+        else
+            return false;
+    }
+
+    function drawMap()
+    {
+        linked = [];
+        var canvas = document.getElementById('mapZone');
+        if (canvas.getContext) {
+
+            //Set the general appearance 
+            canvas.setAttribute('width', $(window).width() - 25);
+            canvas.setAttribute('height', $(window).height() - 25);
+            canvas.setAttribute('style', "border:1px solid #000000;");
+
+            if (map) {
+
+                //add the bridge vertex for the color drawing (Draw vertices)
+                for (var b in map.map.bridges)
+                {
+                    linked.push(map.map.bridges[b].from);
+                }
+
+                //Map size
+                map_server_x = map.map.weight.w;
+                map_server_y = map.map.weight.w;
+
+                //canvas manipulation                
+                var context = canvas.getContext('2d');
+
+                //Draw map name
+                context.beginPath();
+                context.font = '30pt Calibri';
+                context.fillStyle = 'black';
+                context.fillText(map.name, 10, 30);
+                context.fill();
+                context.closePath();
+
+                //Drow streets for all verticess
+                for (var s in map.map.streets)
+                {
+                    //Get path
+                    context.beginPath();
+                    var pa = map.map.streets[s].path[0]
+                    var pb = map.map.streets[s].path[1]
+                    linked.push(pa);
+                    linked.push(pb);
+
+                    //Search the first path
+                    for (var p in map.map.vertices)
+                    {
+                        if (map.map.vertices[p].name === pa)
+                        {
+                            var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
+                            var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
+                            context.moveTo(xScale, yScale);
+                            break;
+                        }
+                    }
+
+                    //Search the second path
+                    for (var p in map.map.vertices)
+                    {
+                        if (map.map.vertices[p].name === pb)
+                        {
+                            var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
+                            var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
+                            context.lineTo(xScale, yScale);
+                            break;
+                        }
+                    }
+
+                    context.lineWidth = 7;
+                    context.strokeStyle = '#F5D0A9';
+                    context.lineCap = 'round';
+                    context.stroke();
+                    context.fill();
+                    context.closePath();
+                }
+
+                //Draw vertices
+                for (var p in map.map.vertices)
+                {
+                    var xScale = Math.abs(map.map.vertices[p].x * $(window).width() / map_server_x - 50);
+                    var yScale = Math.abs(map.map.vertices[p].y * $(window).height() / map_server_y - 50);
+
+                    context.beginPath();
+                    context.shadowColor = 'black';
+
+                    if (isMultiLinkedVervex(map.map.vertices[p].name))
+                    {
+                        context.shadowBlur = 3;
+                        context.shadowOffsetX = 0;
+                        context.shadowOffsetY = 0;
+                        context.fillStyle = 'orange';
+
+                    } else {
+                        context.shadowBlur = 5;
+                        context.shadowOffsetX = -1;
+                        context.shadowOffsetY = 1;
+                        context.fillStyle = 'red';
+                    }
+
+                    context.arc(xScale, yScale, 20, 0, Math.PI * 2, 0);
+                    context.fill();
+                    context.closePath();
+
+                    //Draw name
+                    context.beginPath();
+                    context.font = '20pt Calibri';
+                    context.fillStyle = 'black';
+                    context.fillText(map.map.vertices[p].name, xScale - 7, yScale + 7);
+                    context.fill();
+                    context.closePath();
+                }
+
+                //Draw ALL the cabs if exist
+                if (map.map.cabs)
+                {
+                    for (var cab in map.map.cabs)
+                    {
+                        //Get the map area
+                        var vertexID = -1
+                        for(var v in map.map.vertices)
+                        {
+                            if (map.map.vertices[v].name === map.map.cabs[cab].position)
+                            {
+                                vertexID = v;
+                            }
+                        }                            
+                        
+                        if (vertexID > -1)
+                        {
+                            //ouf, we have the vertex coordinate !
+                            //Get the X and Y of the point
+                            var xScale = Math.abs(map.map.vertices[vertexID].x * $(window).width() / map_server_x - 50);
+                            var yScale = Math.abs(map.map.vertices[vertexID].y * $(window).height() / map_server_y - 50);
+                            //load the cab pics
+                            var imageObj = new Image();
+                            context.beginPath();
+                            imageObj.onload = function () {
+                                context.drawImage(imageObj, xScale - 25, yScale - 25, 50, 50);
+                            };
+                            imageObj.src = '{{ url_for('static', filename='img/cab.png') }}';
+                            context.fill();
+                            context.closePath();
+                        }
+                    }
+                }
+            }
+        }
+    };
+    
     //Namespace for client
     namespace = '/client';
 
@@ -42,21 +200,33 @@ $(document).ready(function () {
         //todo : show a popup
     });
 
+    $('.enter_link').click(function () {
+            $(this).parent().fadeOut(500);
+            //GET and Show the map
+            socket.emit('get my map');
+            window.onresize = drawMap;
+            drawMap();
+            //Add some style effect
+            $("#mapScreen").show("slow", function () {
+                //After effect         
+            });
+            
+        });
+        
     //Get the mouse click and send to the server
-    $('#mapZone').click(function(e) {
-    //Get position     
-    var offset = $(this).offset();
-    var x = e.pageX - offset.left;
-    var y = e.pageY - offset.top;
-    //Normalize
-    x = x * map_server_x / $('#mapZone').width();
-    y = y * map_server_y / $('#mapZone').height();
-    //alert(x + ':' + y);
-    //Send to the server
-    socket.emit('new target', {"x": x, "y": y});  
-    socket.emit('cab ok', {'x': x, 'y': y});   
+    $('#mapZone').click(function (e) {
+        //Get position
+        var offset = $(this).offset();
+        var x = e.pageX - offset.left;
+        var y = e.pageY - offset.top;
+        //Normalize
+        x = x * map_server_x / $('#mapZone').width();
+        y = y * map_server_y / $('#mapZone').height();
+        //alert(x + ':' + y);
+        //Send to the server
+        socket.emit('new target', {"x": x, "y": y});
     });
-  
+
     // event handler for server sent data
     // the data is displayed in the "Received" section of the page
     socket.on('log', function (msg) {
@@ -66,13 +236,17 @@ $(document).ready(function () {
     // event handler for server sent data
     // the data is displayed in the "Received" section of the page
     socket.on('new map', function (msg) {
-        $('#log').append('<br>NEW MAP received : ' + msg.data);
+        map = JSON.parse(msg);
+        $('#log').append('<br>NEW MAP is receved');
         drawMap();
     });
-    
+
+    socket.on('no map', function (msg) {
+        $('#log').append('<br>NO MAP available : ' + msg.data);
+    });
     socket.on('new map is available', function (msg) {
-    $('#log').append('<br>NEW MAP is available : ' + msg.data);
-        socket.emit('get my map');        
+        $('#log').append('<br>NEW MAP is available');
+        socket.emit('get my map');
     });
 
     // handlers for the different forms in the page
@@ -103,11 +277,11 @@ $(document).ready(function () {
                 }
             </style>
 
-            <img src="{{ url_for('static', filename='img/imerir.jpg') }}"  width="200" height="200" />
+            <img src="{{ url_for('static', filename='img/imerir.jpg') }}"  width="100" height="100" />
             <a href="#" class="enter_link">
-                <img src="{{ url_for('static', filename='img/uCAB.png') }}" alt="Click here to enter" width="400" height="200"/>
+                <img src="{{ url_for('static', filename='img/uCAB.png') }}" alt="Click here to enter" width="200" height="100"/>
             </a>
-            <img src="{{ url_for('static', filename='img/raspberry.png') }}" width="200" height="200"/>    
+            <img src="{{ url_for('static', filename='img/raspberry.png') }}" width="100" height="100"/>    
         </div>
 
         <div id="mapScreen"> 
@@ -122,7 +296,7 @@ $(document).ready(function () {
             <canvas id="mapZone" width="200" height="100">
                 Your browser does not support the HTML5 canvas tag.
             </canvas>
-            
+
             <h2>Get MAP:</h2>
             <form id="get_map" method="POST" action="#">
                 <input type="submit" value="Get map">
