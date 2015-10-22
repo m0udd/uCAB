@@ -23,7 +23,6 @@ class ViewController: UIViewController {
     let monClient = Client()
     
     @IBAction func Connexion(sender: AnyObject) {
-        
         monClient.dialogueServeur()
     }
     
